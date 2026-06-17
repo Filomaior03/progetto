@@ -21,9 +21,7 @@ import  numpy as np
 from sklearn.metrics import mean_squared_error,r2_score,mean_absolute_error
 from math import sqrt
 
-
-
-
+#FUNZIONE CHE REGOLA IL MECCANISMO DI ATTENTION
 SINGLE_ATTENTION_VECTOR = False
 def attention_3d_block(inputs):
     # inputs.shape = (batch_size, time_steps, input_dim)
@@ -31,7 +29,8 @@ def attention_3d_block(inputs):
     a = inputs
     #a = Permute((2, 1))(inputs)
     #a = Reshape((input_dim, TIME_STEPS))(a) # this line is not useful. It's just to know which dimension is what.
-    a = Dense(input_dim, activation='softmax')(a)
+    
+    a = Dense(input_dim, activation='softmax')(a) #creo distribuzione di probabilità dei dati in input (pesi di attenzione)
     if SINGLE_ATTENTION_VECTOR:
         a = Lambda(lambda x: K.mean(x, axis=1), name='dim_reduction')(a)
         a = RepeatVector(input_dim)(a)
@@ -39,7 +38,7 @@ def attention_3d_block(inputs):
 
     #output_attention_mul = merge([inputs, a_probs], name='attention_mul', mode='mul')
 
-    output_attention_mul = Multiply()([inputs, a_probs])
+    output_attention_mul = Multiply()([inputs, a_probs])  #moltiplico i pesi di attenzione per i dati in input, le features più rilevanti avranno un peso maggiore
     return output_attention_mul
 
 # Another way to write the attention mechanism Suitable for use with the above error reporting Source:https://blog.csdn.net/uhauha2929/article/details/80733255
@@ -61,33 +60,31 @@ def attention_3d_block2(inputs, single_attention_vector=False):
     output_attention_mul = Multiply()([inputs, a_probs])
     return output_attention_mul
 
-
+#FUNZIONE CHE CREA IL DATASET PER L'ADDESTRAMENTO DEL MODELLO, DALLE SEQUENZE TEMPORALI DI INPUT CREA LE CORRISPONDENTI ETICHETTE DI OUTPUT
 
 def create_dataset(dataset, look_back):
     '''
     Processing of data
     '''
     dataX, dataY = [], []
-    a = int(len(dataset)/153)
+    a = int(len(dataset)/153) #suddivido il dataset in anni, ogni anno ha 153 campioni
     for k in range(a):
         d=1
         for i in range(k*153+look_back,(k+1)*153+1):
             a = dataset[(i-look_back):i,:]
             dataX.append(a)
-
-            #dataset modificato
-            #dataY.append(dataset[i-1,6])
-            dataY.append(dataset[i-1,8])  #--> colonna target
-    #TrainX = np.array(dataX)[:,:,:6]
-    TrainX = np.array(dataX)[:,:,:8]
-    Train_Y = np.array(dataY)
+            dataY.append(dataset[i-1,6])
+    TrainX = np.array(dataX)[:,:,:6]  #features predittive (prime 6 colonne del dataset)
+    Train_Y = np.array(dataY) # target da predire (ultima colonna del dataset, amount of irrigation water)
 
     return TrainX, Train_Y
 
 #Multi-dimensional normalization Returns data and maximum and minimum values
 def NormalizeMult(data):
     #normalize for inverse normalization
+    
     data = np.array(data)
+    
     normalize = np.arange(2*data.shape[1],dtype='float64')
 
     normalize = normalize.reshape(data.shape[1],2)
@@ -109,7 +106,7 @@ def NormalizeMult(data):
 
 #multidimensional inverse normalization
 def FNormalizeMult(data,normalize):
-    data = np.array(data)
+    data = np.array(data, dtype='float64')
     for i in  range(0,data.shape[1]):
         listlow =  normalize[i,0]
         listhigh = normalize[i,1]
@@ -124,7 +121,6 @@ def FNormalizeMult(data,normalize):
 
 def attention_model():
     inputs = Input(shape=(TIME_STEPS, INPUT_DIMS))
-
 
     lstm_out = Bidirectional(LSTM(lstm_units, return_sequences=True))(inputs)
     x2 = Conv1D(filters = 64, kernel_size = 3, activation = 'relu',padding='same')(lstm_out)
@@ -141,39 +137,22 @@ def attention_model():
     model = Model(inputs=[inputs], outputs=output)
     return model
 
-
-
-
 #Load data
 
-data = pd.read_excel("data/data-ready-1.xlsx")
+data = pd.read_excel("data/data-ready-def.xlsx")
 
 #data = data.drop(['Date (UTC)','Mean air temperature 2m(°C)','ET0','Water demand','Surface air pressure (hPa)'], axis = 1)
-
 #nomi colonne codificati male, utilizzo indici per selezionare le colonne
-#tolgo queste colonne perché non sono utili alla previsione, inoltre mantengo le colonne che tengono conto del meteo, più importanti per la previsione
-#probabilmente le altre due colonne sono state tolte dagli autori perché, grazie alla GCA, sono risultate poco rilevanti
-data = data.drop(data.columns[[0, 9, 10]], axis = 1)
+data = data.drop(data.columns[[0, 1, 2, 9, 10]], axis = 1)
 
-# print("--- VERIFICA COLONNE DOPO IL DROP ---")
-# for idx, col in enumerate(data.columns):
-#     print(f"Indice {idx}: {col}")
-# print("-------------------------------------")
-
-# print(data.columns)
-# print(data.shape)
-
-
-#INPUT_DIMS = 6
-#gli input diventano 8 (tolgo 3 colonne invece di 5)
-INPUT_DIMS = 8
+INPUT_DIMS = 6
 
 TIME_STEPS = 20
 lstm_units = 64
 
 #normalize
 data,normalize = NormalizeMult(data)
-pollution_data = data[:,8].reshape(len(data),1)
+pollution_data = data[:,6].reshape(len(data),1)
 
 # train_X, _ = create_dataset(data,TIME_STEPS)
 # _ , train_Y = create_dataset(pollution_data,TIME_STEPS)
@@ -193,13 +172,9 @@ test_mse = mean_squared_error(result2,train_Y[21*134:])
 train_rmse = sqrt(mean_squared_error(result1,train_Y[:21*134]))
 test_rmse = sqrt(mean_squared_error(result2,train_Y[21*134:]))
 
-#BUG NEL CALCOLO DI R2, SONO INVERTITI I VALORI REALI (train_Y...) CON QUELLI PREVISTI (result1...), IL VALORE DI R2 NEL RESULT.TXT RISULTA ENORMEMENTE NEGATIVO
-
-# train_r2 = r2_score(result1,train_Y[:21*134])
-# test_r2 = r2_score(result2,train_Y[21*134:])
-
-train_r2 = r2_score(train_Y[:21*134], result1)
-test_r2 = r2_score(train_Y[21*134:], result2)
+#CALCOLO DI R2 E MAE
+train_r2 = r2_score(result1,train_Y[:21*134])
+test_r2 = r2_score(result2,train_Y[21*134:])
 
 train_mae = mean_absolute_error(result1,train_Y[:21*134])
 test_mae = mean_absolute_error(result2,train_Y[21*134:])
