@@ -75,7 +75,7 @@ def create_dataset(dataset, look_back):
             dataX.append(a)
             dataY.append(dataset[i-1,6])
     TrainX = np.array(dataX)[:,:,:6]  #features predittive (prime 6 colonne del dataset)
-    Train_Y = np.array(dataY) # target da predire (ultima colonna del dataset, amount of irrigation water)
+    Train_Y = np.array(dataY) # target da predire (ultima colonna del dataset, Amount of irrigation)
 
     return TrainX, Train_Y
 
