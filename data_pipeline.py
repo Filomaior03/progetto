@@ -46,3 +46,31 @@ def normalize(train_df_clean, valid_df_clean, test_df_clean):
   test_df_clean[columns] = (test_df_clean[columns] - train_df_min) / (train_df_max - train_df_min)
 
   return train_df_clean, valid_df_clean, test_df_clean, train_df_min, train_df_max
+
+#function to create sequences of features and targets
+def create_sequences(data, look_back, H):
+  feature_columns = [c for c in data.columns if c not in ['Date', 'year', 'Amount of irrigation']]
+  target_column = 'Amount of irrigation'
+
+  X_list = []
+  y_list = []
+
+  for year in data['year'].unique():
+    year_data = data[data['year'] == year]
+
+    #con values i due tipi di dati sono sotto forma di array numpy, numerato con indici 0, 1, 2...
+    features = year_data[feature_columns].values  #shape (153, 8)
+    target = year_data[target_column].values  #shape (153,)
+
+    for i in range(len(year_data) - look_back - H + 1):
+      window = features[i : i+look_back]  #finestra che scorre per selezionare
+      target_value = target[i+look_back - 1 + H]
+
+      X_list.append(window)
+      y_list.append(target_value)
+
+    
+    X = np.array(X_list)
+    y = np.array(y_list)
+
+  return X, y
