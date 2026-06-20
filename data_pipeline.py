@@ -31,29 +31,35 @@ def clean_data(df):
 
   return df
 
-#funzione di normalizzazione (prende i 3 dataset già puliti e restituisce i 3 dataset normalizzati)
-def normalize(train_df_clean, valid_df_clean, test_df_clean):
-  columns = train_df_clean.columns.drop(['Date', 'year']) #nomi delle colonne escluse Date e year (non eliminate)
+#funzione di normalizzazione (prende 3 dataset e li normalizza)
+def normalize(train_df_, valid_df_, test_df_):
+
+  #set da normalizzare, uso una loro copia per non sovrascrivere i set con i valori reali
+  train_df_ = train_df_.copy() 
+  valid_df_ = valid_df_.copy()
+  test_df_ = test_df_.copy()
+  
+  columns = train_df_.columns.drop(['Date', 'year']) #nomi delle colonne escluse Date e year (non eliminate)
 
   #calcolo il minimo e il massimo per ogni colonna del train senza tenere conto delle due colonne
-  train_df_min = train_df_clean[columns].min()
-  train_df_max = train_df_clean[columns].max()
+  train_df_min = train_df_[columns].min()
+  train_df_max = train_df_[columns].max()
   #(questi valori mi serviranno anche per la normalizzazione inversa)
 
   #operazione di normalizzazione min-max sui 3 dataframe, usando i minimi e massimi del train per evitare data leakage
-  train_df_clean[columns] = (train_df_clean[columns] - train_df_min) / (train_df_max - train_df_min)
-  valid_df_clean[columns] = (valid_df_clean[columns] - train_df_min) / (train_df_max - train_df_min)
-  test_df_clean[columns] = (test_df_clean[columns] - train_df_min) / (train_df_max - train_df_min)
+  train_df_[columns] = (train_df_[columns] - train_df_min) / (train_df_max - train_df_min)
+  valid_df_[columns] = (valid_df_[columns] - train_df_min) / (train_df_max - train_df_min)
+  test_df_[columns] = (test_df_[columns] - train_df_min) / (train_df_max - train_df_min)
 
-  return train_df_clean, valid_df_clean, test_df_clean, train_df_min, train_df_max
+  return train_df_, valid_df_, test_df_, train_df_min, train_df_max
 
 #function to create sequences of features and targets
 def create_sequences(data, look_back, H):
   feature_columns = [c for c in data.columns if c not in ['Date', 'year', 'Amount of irrigation']]
   target_column = 'Amount of irrigation'
 
-  X_list = []
-  y_list = []
+  X_list = [] #feature list
+  y_list = [] #target list
 
   for year in data['year'].unique():
     year_data = data[data['year'] == year]
