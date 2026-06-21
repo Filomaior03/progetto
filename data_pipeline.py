@@ -53,7 +53,7 @@ def normalize(train_df_, valid_df_, test_df_):
 
   return train_df_, valid_df_, test_df_, train_df_min, train_df_max
 
-#function to create sequences of features and targets
+#function to create sequences of features and target
 def create_sequences(data, look_back, H):
   feature_columns = [c for c in data.columns if c not in ['Date', 'year', 'Amount of irrigation']]
   target_column = 'Amount of irrigation'
@@ -74,9 +74,8 @@ def create_sequences(data, look_back, H):
 
       X_list.append(window)
       y_list.append(target_value)
-
     
-    X = np.array(X_list)
-    y = np.array(y_list)
+  X = np.array(X_list)
+  y = np.array(y_list)
 
   return X, y
