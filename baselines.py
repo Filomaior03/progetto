@@ -20,8 +20,8 @@ def evaluate(y_true, y_pred):
     return mae, rmse, r2
 
 #funzione di calcolo skill score (relativo a un modello di riferimento, di solito climatology)
-def skill_score(mae_model, mae_reference):
-    return 1 - mae_model / mae_reference
+def skill_score(e_model, e_reference):
+    return 1 - e_model / e_reference
 
 #funzione di addestramento e calcolo delle metriche per modelli lr/gb
 def fit_and_evaluate(model, train_X, train_y, valid_X, valid_y, test_X, test_y, target_min, target_max):

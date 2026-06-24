@@ -1,0 +1,41 @@
+model,feature,importance
+Linear Regression,Air pressure on the ground(hPa),0.2380460764786871
+Linear Regression,Average temperatures(°C),6.201002354378632
+Linear Regression,Maximum temperature(°C),0.7697695557483558
+Linear Regression,Minimum temperature(°C),1.7836671857899686
+Linear Regression,Precipitation(mm),0.024561363791191747
+Linear Regression,Relative humidity(%),0.0570316567877219
+Linear Regression,Wind velocity(m/s),0.016324559240976734
+Linear Regression,Hours of sunshine(h),0.19251206893795125
+Gradient Boosting,Air pressure on the ground(hPa),0.0037029496212479286
+Gradient Boosting,Average temperatures(°C),0.05634958156251047
+Gradient Boosting,Maximum temperature(°C),0.03030459825935042
+Gradient Boosting,Minimum temperature(°C),0.12773143268706774
+Gradient Boosting,Precipitation(mm),0.12723673164775323
+Gradient Boosting,Relative humidity(%),-0.013823491469898249
+Gradient Boosting,Wind velocity(m/s),-0.027046061471036987
+Gradient Boosting,Hours of sunshine(h),0.13839299400398172
+LSTM,Air pressure on the ground(hPa),0.008653033017635758
+LSTM,Average temperatures(°C),0.03194479261554894
+LSTM,Maximum temperature(°C),0.017147932387177312
+LSTM,Minimum temperature(°C),0.03330219862516651
+LSTM,Precipitation(mm),0.032624205156030754
+LSTM,Relative humidity(%),0.03864395409699321
+LSTM,Wind velocity(m/s),0.007434628153388733
+LSTM,Hours of sunshine(h),0.1308033508217072
+CNN,Air pressure on the ground(hPa),0.016759075999668714
+CNN,Average temperatures(°C),0.043222496823434764
+CNN,Maximum temperature(°C),0.06550448986472228
+CNN,Minimum temperature(°C),0.1515894944904719
+CNN,Precipitation(mm),0.047899709061765314
+CNN,Relative humidity(%),0.04866496270680863
+CNN,Wind velocity(m/s),0.024950676456026555
+CNN,Hours of sunshine(h),0.1479661055810361
+BiLSTM-CNN-Attention,Air pressure on the ground(hPa),0.007447535996402266
+BiLSTM-CNN-Attention,Average temperatures(°C),0.06394223092280572
+BiLSTM-CNN-Attention,Maximum temperature(°C),0.052546695296620045
+BiLSTM-CNN-Attention,Minimum temperature(°C),-0.016203740986056647
+BiLSTM-CNN-Attention,Precipitation(mm),0.03212355994161625
+BiLSTM-CNN-Attention,Relative humidity(%),0.0397175764706236
+BiLSTM-CNN-Attention,Wind velocity(m/s),0.008247723054898314
+BiLSTM-CNN-Attention,Hours of sunshine(h),0.13666361462846535
