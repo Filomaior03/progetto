@@ -54,15 +54,26 @@ def normalize(train_df_, valid_df_, test_df_):
   return train_df_, valid_df_, test_df_, train_df_min, train_df_max
 
 #function to create sequences of features and target
+#MODIFICATO: ora restituisce anche `idx`, l'indice originale (in `data`) della riga target di
+#ciascuna sequenza. Serve a due cose:
+#  1) filtrare correttamente la baseline climatology sugli stessi giorni usati per valutare
+#     ogni modello (fix dello skill score richiesto dal tutor: climatology misurata su tutti
+#     i giorni, modelli misurati solo sui giorni "windowed" -> confronto non comparabile);
+#  2) raggruppare le previsioni per anno (2020/2021/2022) senza dover rifare il training.
+#NOTA: dato che il loop è per anno e year_data non viene mai resettato sull'indice, year_index
+#contiene gli indici originali del dataframe passato in input (stesso indice di *_df_clean,
+#dato che normalize() copia ma non fa reset_index).
 def create_sequences(data, look_back, H):
   feature_columns = [c for c in data.columns if c not in ['Date', 'year', 'Amount of irrigation']]
   target_column = 'Amount of irrigation'
 
   X_list = [] #feature list
   y_list = [] #target list
+  idx_list = [] #NEW: indice originale (in `data`) della riga target di ciascuna sequenza
 
   for year in data['year'].unique():
     year_data = data[data['year'] == year]
+    year_index = year_data.index.values #NEW: indici originali delle righe di questo anno
 
     #con values i due tipi di dati sono sotto forma di array numpy, numerato con indici 0, 1, 2...
     features = year_data[feature_columns].values  #shape (153, 8)
@@ -71,11 +82,14 @@ def create_sequences(data, look_back, H):
     for i in range(len(year_data) - look_back - H + 1):
       window = features[i : i+look_back]  #finestra che scorre per selezionare
       target_value = target[i+look_back - 1 + H]
+      target_idx = year_index[i+look_back - 1 + H]  #NEW: indice originale corrispondente al target
 
       X_list.append(window)
       y_list.append(target_value)
+      idx_list.append(target_idx)  #NEW
     
   X = np.array(X_list)
   y = np.array(y_list)
+  idx = np.array(idx_list)  #NEW
 
-  return X, y
+  return X, y, idx

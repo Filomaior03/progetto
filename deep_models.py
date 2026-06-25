@@ -29,7 +29,12 @@ def fit_and_evaluate_deep(model, train_X, train_y, valid_X, valid_y, test_X, tes
   valid_mae, valid_rmse, valid_r2 = evaluate(valid_true_mm, valid_pred_mm)
   test_mae, test_rmse, test_r2 = evaluate(test_true_mm, test_pred_mm)
 
-  return valid_mae, valid_rmse, valid_r2, test_mae, test_rmse, test_r2, history
+  #MODIFICATO: aggiunti i 4 array denormalizzati (stesso pattern di fit_and_evaluate in
+  #baselines.py) per poter ricalcolare le metriche per anno senza rifare il training.
+  #ATTENZIONE: `history` è stato spostato in fondo alla tupla (era in posizione [6], ora è
+  #in [10]) — se lo usi altrove con un indice posizionale, va aggiornato.
+  return (valid_mae, valid_rmse, valid_r2, test_mae, test_rmse, test_r2,
+          valid_true_mm, valid_pred_mm, test_true_mm, test_pred_mm, history)
 
 #LSTM
 def build_lstm_model(input_dims, time_steps, lstm_units):

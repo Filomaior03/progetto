@@ -23,7 +23,25 @@ def evaluate(y_true, y_pred):
 def skill_score(e_model, e_reference):
     return 1 - e_model / e_reference
 
+#NEW: calcola mae/rmse/r2 della climatology SOLO sugli stessi giorni (maschera booleana,
+#oppure array di indici/etichette) su cui è stato valutato il modello da confrontare.
+#Risolve l'inconsistenza segnalata dal tutor: climatology misurata su tutti i giorni del
+#set, modelli misurati solo sui giorni "windowed" -> skill score non comparabile.
+#`selector` può essere:
+#  - una Series booleana con lo stesso indice di true_series/pred_series (caso Persistence
+#    e Seasonal naive, dove la maschera è già una Series pandas);
+#  - un array di etichette di indice (caso modelli a sequenza, da create_sequences -> idx).
+#In entrambi i casi .loc[] fa l'allineamento corretto.
+def climatology_metrics_on(true_series, pred_series, selector):
+    y_true_sel = true_series.loc[selector]
+    y_pred_sel = pred_series.loc[selector]
+    return evaluate(y_true_sel, y_pred_sel)
+
 #funzione di addestramento e calcolo delle metriche per modelli lr/gb
+#MODIFICATO: ora restituisce anche gli array denormalizzati (valid_true_mm, valid_pred_mm,
+#test_true_mm, test_pred_mm). Servono per ricalcolare le metriche su sottoinsiemi (es. per
+#anno) senza dover rifare il fit del modello — R2/MAE/RMSE aggregati restano identici a prima,
+#sono solo aggiunti 4 array in coda alla tupla restituita.
 def fit_and_evaluate(model, train_X, train_y, valid_X, valid_y, test_X, test_y, target_min, target_max):
     
     #appiattisco features e target (3D -> 2D)
@@ -52,7 +70,8 @@ def fit_and_evaluate(model, train_X, train_y, valid_X, valid_y, test_X, test_y, 
     valid_mae, valid_rmse, valid_r2 = evaluate(valid_true_mm, valid_pred_mm)
     test_mae, test_rmse, test_r2 = evaluate(test_true_mm, test_pred_mm)
 
-    return valid_mae, valid_rmse, valid_r2, test_mae, test_rmse, test_r2
+    return (valid_mae, valid_rmse, valid_r2, test_mae, test_rmse, test_r2,
+            valid_true_mm, valid_pred_mm, test_true_mm, test_pred_mm)  #NEW: 4 array in coda
 
 #funzione climatology
 def climatology_pred(train_df, df, day_col='day of season', target_col='Amount of irrigation'):
